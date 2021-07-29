@@ -1,6 +1,6 @@
 [package]
 name = "machineid-rs"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2018"
 description = "Get an encrypted HWID/MachineID on windows or linux"
 readme="README.md"
