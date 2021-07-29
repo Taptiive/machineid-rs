@@ -13,7 +13,7 @@ First add this to your Cargo.toml file
 machineid-rs = "1.0.2"
 ```
 
-Getting the encrypted id is as simple as doing this
+Then, getting the encrypted id is as simple as doing this
 
 ```rust
 let id_result = machineid_rs::encrypted_id("Your Key").unwrap();
