@@ -1,4 +1,4 @@
-[![(https://img.shields.io/crates/v/machineid-rs.svg)](https://crates.io/crates/machineid-rs)
+
 
 ## MachineID/HWID for Rust
 
