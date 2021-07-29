@@ -1,4 +1,4 @@
-[![(https://img.shields.io/badge/Crates.io-Current%20Version-orange?style=for-the-badge&logo=rust.svg)](https://crates.io/crates/machineid-rs)
+[![(https://img.shields.io/crates/v/machineid-rs.svg?style=for-the-badge&logo=rust&color=orange)](https://crates.io/crates/machineid-rs)
 
 ## MachineID/HWID for Rust
 
