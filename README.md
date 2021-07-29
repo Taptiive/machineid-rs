@@ -1,8 +1,8 @@
-##MachineID/HWID for Rust
+## MachineID/HWID for Rust
 
 Get the encrypted HWID/MachineID of a pc running Windows or Linux.
 
-###How to use
+### How to use
 
 Getting the encrypted id is as simple as doing this
 
