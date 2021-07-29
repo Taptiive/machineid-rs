@@ -1,4 +1,4 @@
-<a href="https://crates.io/crates/machineid-rs" target=”_blank”><img src="https://img.shields.io/crates/v/machineid-rs?style=for-the-badge&logo=rust&color=orange" /></a>
+<a href="https://crates.io/crates/machineid-rs" target="_blank"><img src="https://img.shields.io/crates/v/machineid-rs?style=for-the-badge&logo=rust&color=orange" /></a>
 
 ## MachineID/HWID for Rust
 
