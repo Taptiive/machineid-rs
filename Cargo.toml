@@ -1,18 +1,24 @@
 [package]
 name = "machineid-rs"
-version = "1.0.2"
+version = "1.1.0"
 edition = "2018"
-description = "Get an encrypted HWID/MachineID on windows or linux"
+description = "Get an encrypted unique MachineID/HWID/UUID"
 readme="README.md"
 repository="https://github.com/Taptiive/machineid-rs"
 license = "MIT OR Apache-2.0"
-keywords = ["hwid", "machineid", "hardwareid", "machine-id", "hardware-id"]
+keywords = ["hwid", "machineid", "hardwareid", "machine-id", "hardware-id", "uuid"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-hmac = "0.11.0"
-sha2 = "0.9.5"
+sysinfo = "0.19.2"
+whoami = "1.1.2"
+serde = "1.0.126"
+rust-crypto = "0.2.36"
+hex = "0.4.3"
+indexmap = "1.7.0"
+itertools = "0.10.1"
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.9.0"
+wmi = "0.9.0"

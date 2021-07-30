@@ -1,93 +1,113 @@
-use std::{io::Read};
-use hmac::{Hmac, Mac, NewMac};
-use sha2::Sha256;
-use std::fs::File;
-use std::fmt;
+mod errors;
+mod windows;
+mod linux;
 
-type HmacSha256 = Hmac<Sha256>;
+use errors::RetrievalError;
 
-#[derive(Debug)]
-pub struct HwidRetrievalError;
-
-#[derive(Debug)]
-struct FileNotFound;
-
-impl fmt::Display for HwidRetrievalError{
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result{
-        write!(f, "Could not retrieve the HWID")
-    }
-}
-
-impl HwidRetrievalError{
-    fn new() -> Self{
-        Self
-    }
-}
-
-impl fmt::Display for FileNotFound{
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result{
-        write!(f, "Could not find the file")
-    }
-}
-
-impl FileNotFound{
-    fn new() -> Self{
-        Self
-    }
-}
-
+use itertools::Itertools;
+#[cfg(target_os="linux")]
+use linux::get_hwid;
 #[cfg(target_os="windows")]
-use winreg::{enums::HKEY_LOCAL_MACHINE, RegKey};
+use windows::{get_hwid, get_disk_id};
 
-#[cfg(target_os="windows")]
-fn get_hwid() -> Result<String, HwidRetrievalError>{
-    let rkey = RegKey::predef(HKEY_LOCAL_MACHINE)
-    .open_subkey("SOFTWARE\\Microsoft\\Cryptography")
-    .expect("Failed to retrieve the hwid (Possible permission error)");
-    let id = rkey.get_value("MachineGuid")
-    .expect("Failed to retrieve the hwid (OS Error)");
-    Ok(id)
+use sysinfo::{SystemExt, System, ProcessorExt};
+use crypto::{hmac::Hmac, mac::Mac, md5::Md5, sha1::Sha1, sha2::Sha256};
+use std::collections::HashSet;
+use indexmap::IndexMap;
+
+
+pub enum Encryption{
+    MD5,
+    SHA256,
+    SHA1
 }
 
-#[cfg(target_os="linux")]
-const MACHINE_ID_FILES:[& str;2] = [
-    "/var/lib/dbus/machine-id",
-    "/etc/machine-id"
-];
-
-#[cfg(target_os="linux")]
-fn get_file_content(path:&str) -> Result<String, FileNotFound>{
-    let file_result = File::open(path);
-    return match file_result{
-        Ok(mut file) => {
-            let mut content = String::new();
-            file.read_to_string(&mut content).expect("Could not read file contents");
-            Ok(content)
-        },
-        Err(_) => Err(FileNotFound::new())
-    }
-}
-
-#[cfg(target_os="linux")]
-fn get_hwid() -> Result<String, HwidRetrievalError>{
-    for path in MACHINE_ID_FILES.iter(){
-        if std::path::Path::new(path).exists(){
-            let content = get_file_content(path)
-            .expect("Could not read file contents");
-            return Ok(content)
+impl Encryption{
+    fn generate_hash(&self, key:&[u8], text:String) -> String{
+        match self{
+            Encryption::MD5 => {
+                let mut mac = Hmac::new(Md5::new(), key);
+                mac.input(text.as_bytes());
+                let hash = mac.result();
+                hex::encode(hash.code())
+            },
+            Encryption::SHA1 => {
+                let mut mac = Hmac::new(Sha1::new(), key);
+                mac.input(text.as_bytes());
+                let hash = mac.result();
+                hex::encode(hash.code())
+            },
+            Encryption::SHA256 => {
+                let mut mac = Hmac::new(Sha256::new(), key);
+                mac.input(text.as_bytes());
+                let hash = mac.result();
+                hex::encode(hash.code())
+            }
         }
     }
-    Err(HwidRetrievalError::new())
+}
+pub struct IdBuilder{
+    parts: IndexMap<&'static str, String>,
+    pub hash: Encryption,
 }
 
-pub fn encrypted_id(key:&str) -> Result<String, HwidRetrievalError>{
-    let id = get_hwid()
-    .expect("Could not retrieve HWID");
-    let mut mac = HmacSha256::new_from_slice(
-        id.as_bytes()
-    ).expect("Could not retrieve HWID");
-    mac.update(key.as_bytes());
-    let result = mac.finalize().into_bytes();
-    let hex_result = format!("{:x}", result);
-    Ok(hex_result)
+impl IdBuilder{
+    pub fn build(&mut self, key:&str) -> String{
+        if self.parts.len() == 0 {
+            panic!("You must add at least one element to make a machine id");
+        }
+        let set: HashSet<_> = self.parts.drain(..).collect();
+        self.parts.extend(set.into_iter());
+        let mut final_string = String::new();
+        self.parts.iter().sorted().for_each(|(_,p)|final_string.push_str(p.as_str()));
+        self.hash.generate_hash(key.as_bytes(), final_string)
+    }
+    #[cfg(target_os="windows")]
+    pub fn add_drive_serial(&mut self) -> &mut IdBuilder{
+        let serial = get_disk_id().unwrap();
+        self.parts.insert("Drive Serial",serial);
+        return self
+    }
+    pub fn add_cpu_id(&mut self) -> &mut IdBuilder{
+        let sys = System::new_all();
+        let processor = sys.global_processor_info();
+        let id = processor.vendor_id();
+        self.parts.insert("CPU Id",id.to_string());
+        return self
+    }
+    pub fn add_machine_name(&mut self) -> &mut IdBuilder{
+        let sys = System::new_all();
+        let name = sys.host_name().expect("Unexpected error retrieving machine name");
+        self.parts.insert("Machine Name",name);
+        return self
+    }
+    pub fn add_username(&mut self) -> &mut IdBuilder{
+        let username = whoami::username();
+        self.parts.insert("Username", username);
+        return self
+    }
+    pub fn add_os_name(&mut self) -> &mut IdBuilder{
+        let sys = System::new_all();
+        let name = sys.long_os_version().expect("Unexpected error retrieving OS name");
+        self.parts.insert("OS Name",name);
+        return self
+    }
+    pub fn add_cpu_cores(&mut self) -> &mut IdBuilder{
+        let sys = System::new_all();
+        let cores = sys.physical_core_count().unwrap_or(2);
+        self.parts.insert("CPU Cores",cores.to_string());
+        return self
+    }
+    pub fn add_system_id(&mut self) -> &mut IdBuilder{
+        let id = get_hwid().expect("Unexpected error retrieving system id");
+        self.parts.insert("System ID",id);
+        return self
+    }
+    pub fn new(hash:Encryption) -> IdBuilder{
+        IdBuilder{
+            parts: IndexMap::new(),
+            hash,
+        }
+    }
+    
 }
