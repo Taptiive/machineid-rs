@@ -1,6 +1,6 @@
 <a href="https://crates.io/crates/machineid-rs"><img src="https://img.shields.io/crates/v/machineid-rs?style=for-the-badge&logo=rust&color=orange" /></a>
 
-## MachineId for Rust - Like .Net DeviceId
+## MachineID for Rust - Like .Net DeviceId
 
 This Rust package is inspired by [DeviceId](https://github.com/MatthewKing/DeviceId), a .Net package to build a unique Machine ID.
 
