@@ -43,13 +43,13 @@ The available components are:
   
 For example, i will add the System UUID and CPU Cores
 ```rust
-    builder.add_system_id().add_cpu_cores();
+builder.add_system_id().add_cpu_cores();
 ```
 
 Once you are ready, you just need to build the id with your key
 
 ```rust
-    let unique_id = builder.build("your key");
+let unique_id = builder.build("your key");
 ```
 
 ### Todo
