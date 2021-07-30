@@ -17,7 +17,7 @@ First add this to your Cargo.toml file
 
 ```toml
 [dependencies]
-machineid-rs = "1.1.1"
+machineid-rs = "1.1.0"
 ```
 
 Then, you need to define the builder variable with the encryption type you want.
