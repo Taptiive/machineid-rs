@@ -17,12 +17,12 @@ fn get_file_content(path:&str) -> Result<String, FileNotFound>{
             file.read_to_string(&mut content).expect("Could not read file contents");
             Ok(content)
         },
-        Err(_) => Err(FileNotFound::new())
+        Err(_) => Err(FileNotFound)
     }
 }
 
 #[cfg(target_os="linux")]
-pub fn get_hwid() -> Result<String, HwidRetrievalError>{
+pub fn get_hwid() -> Result<String, RetrievalError>{
     for path in MACHINE_ID_FILES.iter(){
         if std::path::Path::new(path).exists(){
             let content = get_file_content(path)
@@ -30,5 +30,5 @@ pub fn get_hwid() -> Result<String, HwidRetrievalError>{
             return Ok(content)
         }
     }
-    Err(HwidRetrievalError::new())
+    Err(RetrievalError)
 }

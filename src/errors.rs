@@ -12,20 +12,8 @@ impl fmt::Display for RetrievalError{
     }
 }
 
-impl RetrievalError{
-    fn new() -> Self{
-        Self
-    }
-}
-
 impl fmt::Display for FileNotFound{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result{
         write!(f, "Could not find the file")
-    }
-}
-
-impl FileNotFound{
-    fn new() -> Self{
-        Self
     }
 }
