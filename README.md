@@ -6,8 +6,8 @@ This Rust package is inspired by [DeviceId](https://github.com/MatthewKing/Devic
 
 ### Features
 
-- 3 Different types of hash (MD5, SHA1, SHA256)
-- Different components to make the id
+- 3 Different types of hash (*MD5*, *SHA1*, *SHA256*)
+- Different components to make the ID
 - Support for Windows and Linux
 - No Admin privileges are required
 
@@ -17,7 +17,7 @@ First add this to your Cargo.toml file
 
 ```toml
 [dependencies]
-machineid-rs = "1.1.0"
+machineid-rs = "1.1.2"
 ```
 
 Then, you need to define the builder variable with the encryption type you want.
@@ -33,13 +33,19 @@ After that, you just need to add the components you want the id to have.
 
 The available components are:
 
-- System UUID
-- CPU Cores
-- OS Name
-- Username
-- Machine Name
-- CPU ID
-- Drive Serial (Only in windows)
+- **System UUID**: Unique identifier of your machine
+  
+- **CPU Cores**: Number of physical cores from your computer
+  
+- **OS Name**: Operative System name, i.e., linux/windows
+  
+- **Username**: The username currently being used
+  
+- **Machine Name**: The name of the machine
+  
+- **CPU ID**: The serial number of the processor
+  
+- **Drive Serial** : The serial number of the disk storing the OS.
   
 For example, i will add the System UUID and CPU Cores
 ```rust
@@ -54,9 +60,6 @@ let unique_id = builder.build("your key");
 
 ### Todo
 
-- Add MAC Address
-- Add Motherboard Serial
-- Add File Token
 - Optimize the code
   
-It is very possible for this code to have numerous bugs so if you find one, feel free to report it
+*Feel free to report any bug you find! ;)*
