@@ -7,7 +7,7 @@ description = "Get an encrypted unique MachineID/HWID/UUID. Inspired by .Net Dev
 readme="README.md"
 repository="https://github.com/Taptiive/machineid-rs"
 license = "MIT OR Apache-2.0"
-keywords = ["hwid", "machineid", "machine id", "hardware id", "uuid"]
+keywords = ["hwid", "machineid", "hardware-id", "machineuid", "uuid"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

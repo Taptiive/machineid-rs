@@ -134,7 +134,7 @@ mod test{
     #[test]
     fn file_token(){
         let mut a = IdBuilder::new(Encryption::SHA256);
-        a.add_file_token("/home/bspc/test_file.txt");
+        a.add_file_token("/home/aa/test_file.txt");
         let b = a.build("a");
         println!("{}", b);
     }
