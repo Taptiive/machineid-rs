@@ -27,6 +27,7 @@ struct Device{
     uuid: Option<String>
 }
 
+#[cfg(target_os="linux")]
 impl Output{
     #[cfg(target_os="linux")]
     fn get_root(self) -> Result<String, RetrievalError>{
