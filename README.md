@@ -1,4 +1,8 @@
 <a href="https://crates.io/crates/machineid-rs"><img src="https://img.shields.io/crates/v/machineid-rs?style=for-the-badge&logo=rust&color=orange" /></a>
+<a href="https://docs.rs/machineid_rs">
+    <img src="https://img.shields.io/badge/docs-latest-blue.svg?style=for-the-badge&logo=rust&color=blue"
+      alt="docs.rs docs" />
+</a>
 
 ## MachineID for Rust - Like .Net DeviceId
 
@@ -17,7 +21,7 @@ First add this to your Cargo.toml file
 
 ```toml
 [dependencies]
-machineid-rs = "1.2"
+machineid-rs = "1.2.1"
 ```
 
 Then, you need to define the builder variable with the encryption type you want.
