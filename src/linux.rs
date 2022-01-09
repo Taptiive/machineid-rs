@@ -1,8 +1,13 @@
 
+#[cfg(target_os="linux")]
 use std::fs::File;
+#[cfg(target_os="linux")]
 use std::{io::Read, process::Command};
-use crate::errors::{FileNotFound, RetrievalError};
+#[cfg(target_os="linux")]
+use crate::errors::{HWIDError};
+#[cfg(target_os="linux")]
 use serde::Deserialize;
+
 
 #[cfg(target_os="linux")]
 const MACHINE_ID_FILES:[& str;2] = [
@@ -30,7 +35,7 @@ struct Device{
 #[cfg(target_os="linux")]
 impl Output{
     #[cfg(target_os="linux")]
-    fn get_root(self) -> Result<String, RetrievalError>{
+    fn get_root(self) -> Result<String, HWIDError>{
         for devc in self.blockdevices.into_iter(){
             if let Some(mountpoint) = devc.mountpoint{
                 if mountpoint.eq("/") {
@@ -51,55 +56,47 @@ impl Output{
                 }
             }
         }
-        Err(RetrievalError)
+        Err(HWIDError::new("UuidError", "Could not find root disk's UUID"))
     }
 }
 
 #[cfg(target_os="linux")]
-pub fn get_disk_id() -> Result<String, RetrievalError>{
+pub(crate) fn get_disk_id() -> Result<String, HWIDError>{
 
     let mut com = Command::new("sh");
-    com.arg("-c").arg("lsblk -f -J");
+    com.arg("-c").arg("lsblk -f -J -o NAME,MOUNTPOINT,UUID");
 
-    let output = com.output().
-    expect("Invalid command output");
+    let output = com.output()?;
 
-    let output_string = String::from_utf8(output.stdout)
-    .expect("Could not read invalid bytes");
-    let parsed:Output = serde_json::from_str(output_string.as_str()).expect("Invalid JSON returned by command");
-    let uuid = parsed.get_root().expect("Could not detect root disk");
+    let output_string = String::from_utf8(output.stdout)?;
+    let parsed:Output = serde_json::from_str(output_string.as_str())?;
+    let uuid = parsed.get_root()?;
     Ok(uuid)
 }
 
 #[cfg(target_os="linux")]
-pub fn get_mac_address() -> String{
+pub(crate) fn get_mac_address() -> Result<String, HWIDError>{
     let mut com = Command::new("sh");
     com.arg("-c").arg("cat /sys/class/net/$(ip route show default | awk '/default/ {print $5}')/address");
-    let output = com.output().expect("Could not read output from command");
-    String::from_utf8(output.stdout).expect("Invalid bytes in command output")
+    let output = com.output()?;
+    Ok(String::from_utf8(output.stdout)?)
 }
 
 #[cfg(target_os="linux")]
-fn get_file_content(path:&str) -> Result<String, FileNotFound>{
-    let file_result = File::open(path);
-    return match file_result{
-        Ok(mut file) => {
-            let mut content = String::new();
-            file.read_to_string(&mut content).expect("Could not read file contents");
-            Ok(content)
-        },
-        Err(_) => Err(FileNotFound)
-    }
+fn get_file_content(path:&str) -> Result<String, HWIDError>{
+    let mut file = File::open(path)?;
+    let mut content = String::new();
+    file.read_to_string(&mut content)?;
+    Ok(content)
 }
 
 #[cfg(target_os="linux")]
-pub fn get_hwid() -> Result<String, RetrievalError>{
+pub(crate) fn get_hwid() -> Result<String, HWIDError>{
     for path in MACHINE_ID_FILES.iter(){
         if std::path::Path::new(path).exists(){
-            let content = get_file_content(path)
-            .expect("Could not read file contents");
+            let content = get_file_content(path)?;
             return Ok(content)
         }
     }
-    Err(RetrievalError)
+    Err(HWIDError::new("FileNotFound", "Could not find the files containing the System ID"))
 }

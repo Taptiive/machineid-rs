@@ -17,15 +17,16 @@ First add this to your Cargo.toml file
 
 ```toml
 [dependencies]
-machineid-rs = "1.1.2"
+machineid-rs = "1.1.5"
 ```
 
 Then, you need to define the builder variable with the encryption type you want.
 
 For example, **SHA256**
 ```rust
-use machineid_rs::{Encryption, IdBuilder};
+use machineid_rs::{IdBuilder, Encryption};
 
+// There are 3 different encryption types: MD5, SHA1 and SHA256.
 let mut builder = IdBuilder::new(Encryption::SHA256);
 ```
 
@@ -49,13 +50,15 @@ The available components are:
   
 For example, i will add the System UUID and CPU Cores
 ```rust
-builder.add_system_id().add_cpu_cores();
+use machineid_rs::HWIDComponent;
+
+builder.add_component(HWIDComponent::SystemID).add_component(HWIDComponent::CPUCores);
 ```
 
 Once you are ready, you just need to build the id with your key
 
 ```rust
-let unique_id = builder.build("your key");
+let hwid = builder.build("mykey").unwrap();
 ```
 
 ### Todo

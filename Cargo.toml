@@ -1,6 +1,6 @@
 [package]
 name = "machineid-rs"
-version = "1.1.2"
+version = "1.1.5"
 edition = "2018"
 authors = ["Taptiive <aalexius912@gmail.com>"]
 description = "Get an encrypted unique MachineID/HWID/UUID. Inspired by .Net DeviceId."
@@ -12,16 +12,14 @@ keywords = ["hwid", "machineid", "hardware-id", "machineuid", "uuid"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sysinfo = "0.20.0"
-whoami = "1.1.2"
-serde = "1.0.126"
-serde_json = "1.0.66"
+sysinfo = "0.22.5"
+whoami = "1.2.1"
+serde = "1.0.133"
+serde_json = "1.0.74"
 rust-crypto = "0.2.36"
 hex = "0.4.3"
-indexmap = "1.7.0"
-itertools = "0.10.1"
 uuid = {version="0.8.2", features = ["v4"]}
 
 [target.'cfg(windows)'.dependencies]
-winreg = "0.9.0"
+winreg = "0.10.1"
 wmi = "0.9.0"
