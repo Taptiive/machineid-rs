@@ -1,5 +1,5 @@
 <a href="https://crates.io/crates/machineid-rs"><img src="https://img.shields.io/crates/v/machineid-rs?style=for-the-badge&logo=rust&color=orange" /></a>
-<a href="https://docs.rs/machineid_rs">
+<a href="https://docs.rs/machineid-rs/latest/machineid_rs/">
     <img src="https://img.shields.io/badge/docs-latest-blue.svg?style=for-the-badge&logo=rust&color=blue"
       alt="docs.rs docs" />
 </a>
