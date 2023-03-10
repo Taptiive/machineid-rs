@@ -27,8 +27,11 @@ use linux::{get_disk_id, get_hwid, get_mac_address};
 #[cfg(target_os = "windows")]
 use windows::{get_disk_id, get_hwid, get_mac_address};
 
-use crypto::{hmac::Hmac, mac::Mac, md5::Md5, sha1::Sha1, sha2::Sha256};
-use sysinfo::{ProcessorExt, System, SystemExt};
+use hmac::{Hmac, Mac};
+use md5::Md5;
+use sha1::Sha1;
+use sha2::Sha256;
+use sysinfo::{CpuExt, System, SystemExt};
 use utils::file_token;
 
 /// The components that can be used to build the HWID.
@@ -83,7 +86,7 @@ impl HWIDComponent {
             MacAddress => get_mac_address(),
             CPUID => {
                 let sys = System::new_all();
-                let processor = sys.global_processor_info();
+                let processor = sys.global_cpu_info();
                 Ok(processor.vendor_id().to_string())
             }
             FileToken(filename) => file_token(filename),
@@ -99,26 +102,30 @@ pub enum Encryption {
     SHA1,
 }
 
+type HmacMd5 = Hmac<Md5>;
+type HmacSha1 = Hmac<Sha1>;
+type HmacSha256 = Hmac<Sha256>;
+
 impl Encryption {
-    fn generate_hash(&self, key: &[u8], text: String) -> String {
+    fn generate_hash(&self, key: &[u8], text: String) -> Result<String, HWIDError> {
         match self {
             Encryption::MD5 => {
-                let mut mac = Hmac::new(Md5::new(), key);
-                mac.input(text.as_bytes());
-                let hash = mac.result();
-                hex::encode(hash.code())
+                let mut mac = HmacMd5::new_from_slice(key)?;
+                mac.update(text.as_bytes());
+                let result = mac.finalize();
+                Ok(hex::encode(result.into_bytes().as_slice()))
             }
             Encryption::SHA1 => {
-                let mut mac = Hmac::new(Sha1::new(), key);
-                mac.input(text.as_bytes());
-                let hash = mac.result();
-                hex::encode(hash.code())
+                let mut mac = HmacSha1::new_from_slice(key)?;
+                mac.update(text.as_bytes());
+                let result = mac.finalize();
+                Ok(hex::encode(result.into_bytes().as_slice()))
             }
             Encryption::SHA256 => {
-                let mut mac = Hmac::new(Sha256::new(), key);
-                mac.input(text.as_bytes());
-                let hash = mac.result();
-                hex::encode(hash.code())
+                let mut mac = HmacSha256::new_from_slice(key)?;
+                mac.update(text.as_bytes());
+                let result = mac.finalize();
+                Ok(hex::encode(result.into_bytes().as_slice()))
             }
         }
     }
@@ -159,7 +166,7 @@ impl IdBuilder {
             .iter()
             .map(|p| p.to_string())
             .collect::<Result<String, HWIDError>>()?;
-        Ok(self.hash.generate_hash(key.as_bytes(), final_string))
+        self.hash.generate_hash(key.as_bytes(), final_string)
     }
 
     /// Adds a component to the `IdBuilder` that will be hashed once you call the [`IdBuilder::build`] function.
