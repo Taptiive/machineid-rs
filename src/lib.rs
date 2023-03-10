@@ -28,7 +28,7 @@ use linux::{get_disk_id, get_hwid, get_mac_address};
 use windows::{get_disk_id, get_hwid, get_mac_address};
 
 use crypto::{hmac::Hmac, mac::Mac, md5::Md5, sha1::Sha1, sha2::Sha256};
-use sysinfo::{ProcessorExt, System, SystemExt};
+use sysinfo::{CpuExt, System, SystemExt};
 use utils::file_token;
 
 /// The components that can be used to build the HWID.
@@ -83,8 +83,8 @@ impl HWIDComponent {
             MacAddress => get_mac_address(),
             CPUID => {
                 let sys = System::new_all();
-                let processor = sys.global_processor_info();
-                Ok(processor.vendor_id().to_string())
+                let cpu = sys.global_cpu_info();
+                Ok(cpu.vendor_id().to_string())
             }
             FileToken(filename) => file_token(filename),
             DriveSerial => get_disk_id(),
