@@ -32,26 +32,35 @@ struct MACGeneric {
 
 #[cfg(target_os = "windows")]
 pub(crate) fn get_disk_id() -> Result<String, HWIDError> {
-    let con = WMIConnection::new(COMLibrary::new().unwrap().into())?;
-    let ser: Vec<DiskGeneric> = con.raw_query("SELECT SerialNumber FROM Win32_PhysicalMedia")?;
-    let serial = ser
-        .get(0)
-        .ok_or(HWIDError::new("UuidError", "Could not retrieve Uuid"))?
-        .serial_number
-        .clone();
-    Ok(serial)
+    std::thread::spawn(|| {
+        let con = WMIConnection::new(COMLibrary::new().unwrap())?;
+        let ser: Vec<DiskGeneric> =
+            con.raw_query("SELECT SerialNumber FROM Win32_PhysicalMedia")?;
+        let serial = ser
+            .get(0)
+            .ok_or(HWIDError::new("UuidError", "Could not retrieve Uuid"))?
+            .serial_number
+            .clone();
+        Ok(serial)
+    })
+    .join()
+    .unwrap()
 }
 
 #[cfg(target_os = "windows")]
 pub(crate) fn get_mac_address() -> Result<String, HWIDError> {
-    let con = WMIConnection::new(COMLibrary::new().unwrap().into())?;
-    let ser: Vec<MACGeneric> = con.raw_query("SELECT MACAddress from Win32_NetworkAdapter")?;
-    Ok(ser
-        .get(0)
-        .ok_or(HWIDError::new(
-            "MACAddress",
-            "Could not retrieve Mac Address",
-        ))?
-        .MACAddress
-        .clone())
+    std::thread::spawn(|| {
+        let con = WMIConnection::new(COMLibrary::new().unwrap())?;
+        let mac: String = con
+            .raw_query(
+                "SELECT MACAddress FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled = true",
+            )
+            .map_err(|_| HWIDError::new("MACAddress", "Could not retrieve Mac Address"))?
+            .into_iter()
+            .map(|x: MACGeneric| x.MACAddress)
+            .collect();
+        Ok(mac)
+    })
+    .join()
+    .unwrap()
 }
