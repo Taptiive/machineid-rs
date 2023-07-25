@@ -16,8 +16,13 @@ thread_local! {
 
 #[cfg(target_os = "windows")]
 pub fn get_hwid() -> Result<String, HWIDError> {
-    let rkey =
-        RegKey::predef(HKEY_LOCAL_MACHINE).open_subkey("SOFTWARE\\Microsoft\\Cryptography")?;
+    use winreg::enums::{KEY_READ, KEY_WOW64_64KEY};
+
+    let rkey = RegKey::predef(HKEY_LOCAL_MACHINE).open_subkey_with_flags(
+        "SOFTWARE\\Microsoft\\Cryptography",
+        KEY_READ | KEY_WOW64_64KEY,
+    )?;
+
     let id = rkey.get_value("MachineGuid")?;
     Ok(id)
 }
