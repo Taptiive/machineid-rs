@@ -1,6 +1,6 @@
 [package]
 name = "machineid-rs"
-version = "1.2.3"
+version = "1.2.4"
 edition = "2018"
 authors = ["Taptiive <aalexius912@gmail.com>"]
 description = "Get an encrypted unique MachineID/HWID/UUID. Inspired by .Net DeviceId."
@@ -13,7 +13,7 @@ categories = ["authentication", "config", "accessibility"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sysinfo = "0.28.2"
+sysinfo = "0.29.6"
 whoami = "1.2.1"
 serde = { version = "1.0.133", features = ["derive"] }
 hex = "0.4.3"

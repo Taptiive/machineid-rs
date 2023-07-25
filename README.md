@@ -12,7 +12,7 @@ This Rust package is inspired by [DeviceId](https://github.com/MatthewKing/Devic
 
 - 3 Different types of hash (*MD5*, *SHA1*, *SHA256*)
 - Different components to make the ID
-- Support for Windows and Linux
+- Support for Windows, Linux and MacOS
 - No Admin privileges are required
 
 ### How to use
@@ -21,7 +21,7 @@ First add this to your Cargo.toml file
 
 ```toml
 [dependencies]
-machineid-rs = "1.2.3"
+machineid-rs = "1.2.4"
 ```
 
 Then, you need to define the builder variable with the encryption type you want.
