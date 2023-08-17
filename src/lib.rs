@@ -22,7 +22,7 @@ mod utils;
 mod windows;
 mod macos;
 
-use errors::HWIDError;
+pub use errors::HWIDError;
 #[cfg(target_os = "linux")]
 use linux::{get_disk_id, get_hwid, get_mac_address};
 #[cfg(target_os = "windows")]
