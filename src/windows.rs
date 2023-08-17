@@ -40,16 +40,53 @@ struct MACGeneric {
     MACAddress: String,
 }
 
+// #[cfg(target_os = "windows")]
+// pub(crate) fn get_disk_id() -> Result<String, HWIDError> {
+//    let con = WMIConnection::new(COM_LIB.with(|con| *con))?;
+//    let ser: Vec<DiskGeneric> = con.raw_query("SELECT SerialNumber FROM Win32_PhysicalMedia")?;
+//    let serial = ser
+//        .get(0)
+//        .ok_or(HWIDError::new("UuidError", "Could not retrieve Uuid"))?
+//        .serial_number
+//        .clone();
+//    Ok(serial)
+// }
+
+use std::process::Command;
 #[cfg(target_os = "windows")]
 pub(crate) fn get_disk_id() -> Result<String, HWIDError> {
-    let con = WMIConnection::new(COM_LIB.with(|con| *con))?;
-    let ser: Vec<DiskGeneric> = con.raw_query("SELECT SerialNumber FROM Win32_PhysicalMedia")?;
-    let serial = ser
-        .get(0)
-        .ok_or(HWIDError::new("UuidError", "Could not retrieve Uuid"))?
-        .serial_number
-        .clone();
-    Ok(serial)
+    match Command::new("cmd")
+        .args(["/C", "wmic diskdrive get deviceId,serialnumber"])
+        .output()
+    {
+        Ok(output) => {
+            let vec_u8 = output.stdout;
+            match String::from_utf8(vec_u8) {
+                Ok(s) => {
+                    let s2: Vec<&str> = s.split('\n').map(|i| i.trim()).collect();
+                    if let Some(r) = s2.iter().find(|s| s.contains("PHYSICALDRIVE0")) {
+                        let res: Vec<String> = r
+                            .split(' ')
+                            .filter(|s| !s.is_empty() && !s.contains("PHYSICALDRIVE0"))
+                            .map(|i| i.to_string())
+                            .collect();
+                        if res.is_empty() || res.len() > 1 {
+                            Err(HWIDError::new(
+                                "DiskIdError",
+                                "the filted vector len is not equal to 1",
+                            ))
+                        } else {
+                            Ok(res[0].clone())
+                        }
+                    } else {
+                        Err(HWIDError::new("DiskIdError", "fail to find PHYSICALDRIVE0"))
+                    }
+                }
+                Err(e) => Err(HWIDError::from(e)),
+            }
+        }
+        Err(e) => Err(HWIDError::from(e)),
+    }
 }
 
 #[cfg(target_os = "windows")]
