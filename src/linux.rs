@@ -82,10 +82,11 @@ pub(crate) fn get_disk_id() -> Result<String, HWIDError> {
 
 #[cfg(target_os = "linux")]
 pub(crate) fn get_mac_address() -> Result<String, HWIDError> {
-    let mut com = Command::new("sh");
-    com.arg("-c")
-        .arg("cat /sys/class/net/$(ip route show default | awk '/default/ {print $5}')/address");
-    let output = com.output()?;
+    let output = Command::new("sh")
+        .arg("-c")
+        .arg("cat /sys/class/net/$(ip route show default | awk '/default/ {print $5}')/address")
+        .output()?;
+
     Ok(String::from_utf8(output.stdout)?)
 }
 
