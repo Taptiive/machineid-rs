@@ -69,12 +69,9 @@ impl Output {
 
 #[cfg(target_os = "linux")]
 pub(crate) fn get_disk_id() -> Result<String, HWIDError> {
-    let mut com = Command::new("sh");
-    com.arg("-c").arg("lsblk -f -J -o NAME,MOUNTPOINT,UUID");
+    let output = run_command("lsblk -f -J -o NAME,MOUNTPOINT,UUID")?;
 
-    let output = com.output()?;
-
-    let output_string = String::from_utf8(output.stdout)?;
+    let output_string = String::from_utf8(output.into())?;
     let parsed: Output = serde_json::from_str(output_string.as_str())?;
     let uuid = parsed.get_root()?;
     Ok(uuid)
