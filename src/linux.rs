@@ -35,6 +35,14 @@ impl Output {
         for devc in self.blockdevices.into_iter() {
             if let Some(mountpoint) = devc.mountpoint {
                 if mountpoint.eq("/") {
+                    // If the main disk is a sdcard, it's much safer to use the hardware cid over partition uuid
+                    if devc.name.contains("mmc") {
+                        let disk_name = &devc.name[0..devc.name.len() - 2];
+                        let uuid = std::fs::read_to_string(format!("/sys/block/{disk_name}/device/cid")).unwrap_or_default().trim();
+                        if uuid.len() == 32 {
+                            return Ok(uuid);
+                        }
+                    }
                     if let Some(uuid) = devc.uuid {
                         return Ok(uuid);
                     }
