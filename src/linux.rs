@@ -19,6 +19,7 @@ struct Output {
 #[cfg(target_os = "linux")]
 #[derive(Deserialize)]
 struct Device {
+    name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     mountpoint: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
