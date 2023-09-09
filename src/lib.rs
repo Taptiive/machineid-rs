@@ -192,6 +192,48 @@ impl IdBuilder {
         return self;
     }
 
+    /// Adds all possible components to the `IdBuilder`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use machineid_rs::{IdBuilder, Encryption};
+    ///
+    /// let mut builder = IdBuilder::new(Encryption::MD5);
+    ///
+    /// builder.add_all();
+    /// ```
+    ///
+    /// It's the same as doing:
+    ///
+    /// ```
+    /// use machineid_rs::{IdBuilder, Encryption, HWIDComponent};
+    ///
+    /// let mut builder = IdBuilder::new(Encryption::MD5);
+    ///
+    /// builder
+    ///     .add_component(HWIDComponent::SystemID)
+    ///     .add_component(HWIDComponent::OSName)
+    ///     .add_component(HWIDComponent::CPUCores)
+    ///     .add_component(HWIDComponent::CPUID)
+    ///     .add_component(HWIDComponent::DriveSerial)
+    ///     .add_component(HWIDComponent::MacAddress)
+    ///     .add_component(HWIDComponent::Username)
+    ///     .add_component(HWIDComponent::MachineName);
+    ///
+    /// ```
+    pub fn add_all(&mut self) -> &mut Self {
+        self
+            .add_component(HWIDComponent::SystemID)
+            .add_component(HWIDComponent::OSName)
+            .add_component(HWIDComponent::CPUCores)
+            .add_component(HWIDComponent::CPUID)
+            .add_component(HWIDComponent::DriveSerial)
+            .add_component(HWIDComponent::MacAddress)
+            .add_component(HWIDComponent::Username)
+            .add_component(HWIDComponent::MachineName)
+    }
+
     /// Makes a new IdBuilder with the selected Encryption
     ///
     /// # Examples
