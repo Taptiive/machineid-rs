@@ -41,7 +41,8 @@ impl Output {
                         let uuid =
                             std::fs::read_to_string(format!("/sys/block/{disk_name}/device/cid"))
                                 .unwrap_or_default()
-                                .trim();
+                                .trim()
+                                .to_string();
                         if uuid.len() == 32 {
                             return Ok(uuid);
                         }
