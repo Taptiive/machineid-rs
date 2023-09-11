@@ -38,7 +38,10 @@ impl Output {
                     // If the main disk is a sdcard, it's much safer to use the hardware cid over partition uuid
                     if devc.name.contains("mmc") {
                         let disk_name = &devc.name[0..devc.name.len() - 2];
-                        let uuid = std::fs::read_to_string(format!("/sys/block/{disk_name}/device/cid")).unwrap_or_default().trim();
+                        let uuid =
+                            std::fs::read_to_string(format!("/sys/block/{disk_name}/device/cid"))
+                                .unwrap_or_default()
+                                .trim();
                         if uuid.len() == 32 {
                             return Ok(uuid);
                         }
@@ -80,8 +83,7 @@ pub(crate) fn get_disk_id() -> Result<String, HWIDError> {
 #[cfg(target_os = "linux")]
 fn run_command(command: &str) -> Result<String, HWIDError> {
     let mut cmd = Command::new("sh");
-    let cmd = cmd.arg("-c")
-        .arg(command);
+    let cmd = cmd.arg("-c").arg(command);
 
     let output = cmd.output()?;
     if !cmd.status()?.success() {
@@ -109,16 +111,18 @@ pub(crate) fn get_mac_address() -> Result<String, HWIDError> {
     // Names incorporating physical/geographical location of the connector of the hardware (example: enp2s0)
     // Names incorporating the interfaces's MAC address (example: enx78e7d1ea46da), we are going to ignore it for now
     // Classic, unpredictable kernel-native ethX naming (example: eth0)
-    let first_cable_interface_names = [vec!["eno0".to_string(), "ens0".to_string()]
-        , (0..10)
+    let first_cable_interface_names = [
+        vec!["eno0".to_string(), "ens0".to_string()],
+        (0..10)
             .map(|x| format!("enp{x}s0"))
-            .collect::<Vec<String>>()
-        , (0..10)
+            .collect::<Vec<String>>(),
+        (0..10)
             .map(|x| format!("wlp{x}s0"))
-            .collect::<Vec<String>>()
-        , vec!["eth0".to_string()]
-        , vec!["wlan0".to_string()]
-    ].concat();
+            .collect::<Vec<String>>(),
+        vec!["eth0".to_string()],
+        vec!["wlan0".to_string()],
+    ]
+    .concat();
 
     for interface_name in first_cable_interface_names {
         let result = get_mac_addressof_interface(&interface_name);
@@ -128,7 +132,9 @@ pub(crate) fn get_mac_address() -> Result<String, HWIDError> {
     }
 
     // If everything just fails, we get the default network interface
-    get_mac_addressof_interface(&run_command("ip route show default | awk '/default/ {print $5}'")?)
+    get_mac_addressof_interface(&run_command(
+        "ip route show default | awk '/default/ {print $5}'",
+    )?)
 }
 
 #[cfg(target_os = "linux")]

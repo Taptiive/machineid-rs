@@ -18,17 +18,17 @@
 
 mod errors;
 mod linux;
+mod macos;
 mod utils;
 mod windows;
-mod macos;
 
 use errors::HWIDError;
 #[cfg(target_os = "linux")]
 use linux::{get_disk_id, get_hwid, get_mac_address};
-#[cfg(target_os = "windows")]
-use windows::{get_disk_id, get_hwid, get_mac_address};
 #[cfg(target_os = "macos")]
 use macos::{get_disk_id, get_hwid, get_mac_address};
+#[cfg(target_os = "windows")]
+use windows::{get_disk_id, get_hwid, get_mac_address};
 
 use hmac::{Hmac, Mac};
 use md5::Md5;
@@ -223,8 +223,7 @@ impl IdBuilder {
     ///
     /// ```
     pub fn add_all(&mut self) -> &mut Self {
-        self
-            .add_component(HWIDComponent::SystemID)
+        self.add_component(HWIDComponent::SystemID)
             .add_component(HWIDComponent::OSName)
             .add_component(HWIDComponent::CPUCores)
             .add_component(HWIDComponent::CPUID)
