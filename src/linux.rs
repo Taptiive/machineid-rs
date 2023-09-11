@@ -96,7 +96,7 @@ fn run_command(command: &str) -> Result<String, HWIDError> {
 
 #[cfg(target_os = "linux")]
 fn get_mac_addressof_interface(interface_name: &str) -> Result<String, HWIDError> {
-    run_command(&format!("cat /sys/class/net/{interface_name}/address"))
+    get_file_content(&format!("/sys/class/net/{interface_name}/address"))
 }
 
 #[cfg(target_os = "linux")]
