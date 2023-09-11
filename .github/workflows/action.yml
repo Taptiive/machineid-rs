@@ -1,0 +1,68 @@
+name: Check, build and deploy!
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  formatting-check:
+    name: Formatting Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install minimal stable with clippy and rustfmt
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          components: rustfmt, clippy
+
+      - name: Check code style
+        run: cargo fmt -- --check
+
+  build:
+    name: Build
+    needs: [formatting-check]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - os: macos-latest
+          TARGET: x86_64-apple-darwin
+
+        - os: macos-latest
+          TARGET: aarch64-apple-darwin
+
+        - os: ubuntu-latest
+          TARGET: arm-unknown-linux-musleabihf
+
+        - os: ubuntu-latest
+          TARGET: armv7-unknown-linux-musleabihf
+
+        - os: ubuntu-latest
+          TARGET: x86_64-unknown-linux-musl
+
+        - os: windows-latest
+          TARGET: x86_64-pc-windows-msvc
+          EXTENSION: .exe
+
+    steps:
+      - name: Building ${{ matrix.TARGET }}
+        run: echo "We need a run for a step :)"
+
+      - uses: actions/checkout@master
+
+      - uses: actions-rs/toolchain@v1.0.1
+        with:
+          toolchain: stable
+          target: ${{ matrix.TARGET }}
+          override: true
+
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --verbose --release --target=${{ matrix.TARGET }}
