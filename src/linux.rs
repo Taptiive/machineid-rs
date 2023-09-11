@@ -69,24 +69,66 @@ impl Output {
 
 #[cfg(target_os = "linux")]
 pub(crate) fn get_disk_id() -> Result<String, HWIDError> {
-    let mut com = Command::new("sh");
-    com.arg("-c").arg("lsblk -f -J -o NAME,MOUNTPOINT,UUID");
+    let output = run_command("lsblk -f -J -o NAME,MOUNTPOINT,UUID")?;
 
-    let output = com.output()?;
-
-    let output_string = String::from_utf8(output.stdout)?;
+    let output_string = String::from_utf8(output.into())?;
     let parsed: Output = serde_json::from_str(output_string.as_str())?;
     let uuid = parsed.get_root()?;
     Ok(uuid)
 }
 
 #[cfg(target_os = "linux")]
+fn run_command(command: &str) -> Result<String, HWIDError> {
+    let mut cmd = Command::new("sh");
+    let cmd = cmd.arg("-c")
+        .arg(command);
+
+    let output = cmd.output()?;
+    if !cmd.status()?.success() {
+        return Err(HWIDError::new(
+            &format!("Failed to run command: {command}"),
+            &String::from_utf8(output.stderr.into())?,
+        ));
+    }
+
+    Ok(String::from_utf8(cmd.output()?.stdout)?)
+}
+
+#[cfg(target_os = "linux")]
+fn get_mac_addressof_interface(interface_name: &str) -> Result<String, HWIDError> {
+    run_command(&format!("cat /sys/class/net/{interface_name}/address"))
+}
+
+#[cfg(target_os = "linux")]
 pub(crate) fn get_mac_address() -> Result<String, HWIDError> {
-    let mut com = Command::new("sh");
-    com.arg("-c")
-        .arg("cat /sys/class/net/$(ip route show default | awk '/default/ {print $5}')/address");
-    let output = com.output()?;
-    Ok(String::from_utf8(output.stdout)?)
+    // First check for first cable internet interface connected on hardware,
+    // if the ethernet cable is not available we find the first wifi interface.
+    // From: https://www.freedesktop.org/wiki/Software/systemd/PredictableNetworkInterfaceNames/
+    // Names incorporating Firmware/BIOS provided index numbers for on-board devices (example: eno1)
+    // Names incorporating Firmware/BIOS provided PCI Express hotplug slot index numbers (example: ens1)
+    // Names incorporating physical/geographical location of the connector of the hardware (example: enp2s0)
+    // Names incorporating the interfaces's MAC address (example: enx78e7d1ea46da), we are going to ignore it for now
+    // Classic, unpredictable kernel-native ethX naming (example: eth0)
+    let first_cable_interface_names = [vec!["eno0".to_string(), "ens0".to_string()]
+        , (0..10)
+            .map(|x| format!("enp{x}s0"))
+            .collect::<Vec<String>>()
+        , (0..10)
+            .map(|x| format!("wlp{x}s0"))
+            .collect::<Vec<String>>()
+        , vec!["eth0".to_string()]
+        , vec!["wlan0".to_string()]
+    ].concat();
+
+    for interface_name in first_cable_interface_names {
+        let result = get_mac_addressof_interface(&interface_name);
+        if result.is_ok() {
+            return result;
+        }
+    }
+
+    // If everything just fails, we get the default network interface
+    get_mac_addressof_interface(&run_command("ip route show default | awk '/default/ {print $5}'")?)
 }
 
 #[cfg(target_os = "linux")]
