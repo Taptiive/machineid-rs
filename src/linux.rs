@@ -99,7 +99,7 @@ fn run_command(command: &str) -> Result<String, HWIDError> {
 
 #[cfg(target_os = "linux")]
 fn get_mac_addressof_interface(interface_name: &str) -> Result<String, HWIDError> {
-    run_command(&format!("cat /sys/class/net/{interface_name}/address"))
+    get_file_content(&format!("/sys/class/net/{interface_name}/address"))
 }
 
 #[cfg(target_os = "linux")]
@@ -132,9 +132,9 @@ pub(crate) fn get_mac_address() -> Result<String, HWIDError> {
         }
     }
 
-    // If everything just fails, we get the default network interface
+    // If everything just fails, we get the (first) default network interface
     get_mac_addressof_interface(&run_command(
-        "ip route show default | awk '/default/ {print $5}'",
+        "ip route show default | awk '/default/ {print $5; exit}'",
     )?)
 }
 
