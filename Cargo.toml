@@ -1,6 +1,6 @@
 [package]
 name = "machineid-rs"
-version = "1.2.4"
+version = "1.2.5"
 edition = "2018"
 authors = ["Taptiive <aalexius912@gmail.com>"]
 description = "Get an encrypted unique MachineID/HWID/UUID. Inspired by .Net DeviceId."
