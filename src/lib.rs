@@ -34,7 +34,7 @@ use hmac::{Hmac, Mac};
 use md5::Md5;
 use sha1::Sha1;
 use sha2::Sha256;
-use sysinfo::{CpuExt, System, SystemExt};
+use sysinfo::System;
 use utils::file_token;
 
 /// The components that can be used to build the HWID.
@@ -72,17 +72,13 @@ impl HWIDComponent {
                 Ok(cores.to_string())
             }
             OSName => {
-                let sys = System::new_all();
-                let name = sys
-                    .long_os_version()
+                let name = System::long_os_version()
                     .ok_or(HWIDError::new("OSName", "Could not retrieve OS Name"))?;
                 Ok(name)
             }
             Username => Ok(whoami::username()),
             MachineName => {
-                let sys = System::new_all();
-                let name = sys
-                    .host_name()
+                let name = System::host_name()
                     .ok_or(HWIDError::new("HostName", "Could not retrieve Host Name"))?;
                 Ok(name)
             }
