@@ -150,7 +150,7 @@ fn get_file_content(path: &str) -> Result<String, HWIDError> {
 pub(crate) fn get_hwid() -> Result<String, HWIDError> {
     for path in MACHINE_ID_FILES.iter() {
         if std::path::Path::new(path).exists() {
-            let content = get_file_content(path)?;
+            let content = get_file_content(path)?.trim().to_string();
             return Ok(content);
         }
     }
