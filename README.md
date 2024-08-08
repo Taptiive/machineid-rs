@@ -69,5 +69,6 @@ let hwid = builder.build("mykey").unwrap();
 ### Todo
 
 - Optimize the code
+- Fix bugs and increase platform integration/stability
   
 *Feel free to report any bug you find! ;)*
