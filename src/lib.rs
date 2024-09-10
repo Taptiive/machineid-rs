@@ -12,7 +12,7 @@
 //!
 //! builder.add_component(HWIDComponent::SystemID).add_component(HWIDComponent::CPUCores);
 //!
-//! let hwid = builder.build("mykey").unwrap();
+//! let hwid = builder.build(Some("mykey")).unwrap();
 
 #![allow(non_snake_case)]
 
@@ -31,9 +31,9 @@ use macos::{get_disk_id, get_hwid, get_mac_address};
 use windows::{get_disk_id, get_hwid, get_mac_address};
 
 use hmac::{Hmac, Mac};
-use md5::Md5;
-use sha1::Sha1;
-use sha2::Sha256;
+use md5::{Digest as Md5Digest, Md5};
+use sha1::{Digest as Sha1Digest, Sha1};
+use sha2::{Digest as Sha256Digest, Sha256};
 use sysinfo::{CpuExt, System, SystemExt};
 use utils::file_token;
 
@@ -64,7 +64,8 @@ pub enum HWIDComponent {
 impl HWIDComponent {
     fn to_string(&self) -> Result<String, HWIDError> {
         use HWIDComponent::*;
-        return match self {
+
+        match self {
             SystemID => get_hwid(),
             CPUCores => {
                 let sys = System::new_all();
@@ -94,7 +95,7 @@ impl HWIDComponent {
             }
             FileToken(filename) => file_token(filename),
             DriveSerial => get_disk_id(),
-        };
+        }
     }
 }
 
@@ -110,25 +111,43 @@ type HmacSha1 = Hmac<Sha1>;
 type HmacSha256 = Hmac<Sha256>;
 
 impl Encryption {
-    fn generate_hash(&self, key: &[u8], text: String) -> Result<String, HWIDError> {
+    fn generate_hash(&self, key: Option<&[u8]>, text: String) -> Result<String, HWIDError> {
         match self {
             Encryption::MD5 => {
-                let mut mac = HmacMd5::new_from_slice(key)?;
-                mac.update(text.as_bytes());
-                let result = mac.finalize();
-                Ok(hex::encode(result.into_bytes().as_slice()))
+                if key.is_none() {
+                    let mut hasher = Md5::new();
+                    hasher.update(text.as_bytes());
+                    Ok(hex::encode(hasher.finalize().to_vec()))
+                } else {
+                    let mut mac = HmacMd5::new_from_slice(key.unwrap())?;
+                    mac.update(text.as_bytes());
+                    let result = mac.finalize();
+                    Ok(hex::encode(result.into_bytes().as_slice()))
+                }
             }
             Encryption::SHA1 => {
-                let mut mac = HmacSha1::new_from_slice(key)?;
-                mac.update(text.as_bytes());
-                let result = mac.finalize();
-                Ok(hex::encode(result.into_bytes().as_slice()))
+                if key.is_none() {
+                    let mut hasher = Sha1::new();
+                    hasher.update(text.as_bytes());
+                    Ok(hex::encode(hasher.finalize().to_vec()))
+                } else {
+                    let mut mac = HmacSha1::new_from_slice(key.unwrap())?;
+                    mac.update(text.as_bytes());
+                    let result = mac.finalize();
+                    Ok(hex::encode(result.into_bytes().as_slice()))
+                }
             }
             Encryption::SHA256 => {
-                let mut mac = HmacSha256::new_from_slice(key)?;
-                mac.update(text.as_bytes());
-                let result = mac.finalize();
-                Ok(hex::encode(result.into_bytes().as_slice()))
+                if key.is_none() {
+                    let mut hasher = Sha256::new();
+                    hasher.update(text.as_bytes());
+                    Ok(hex::encode(hasher.finalize().to_vec()))
+                } else {
+                    let mut mac = HmacSha256::new_from_slice(key.unwrap())?;
+                    mac.update(text.as_bytes());
+                    let result = mac.finalize();
+                    Ok(hex::encode(result.into_bytes().as_slice()))
+                }
             }
         }
     }
@@ -158,9 +177,9 @@ impl IdBuilder {
     ///
     ///
     /// // Will panic if there is an error when the components return his values.
-    /// let key = builder.build("mykey").unwrap();
+    /// let key = builder.build(Some("mykey")).unwrap();
     /// ```
-    pub fn build(&mut self, key: &str) -> Result<String, HWIDError> {
+    pub fn build(&mut self, key: Option<&str>) -> Result<String, HWIDError> {
         if self.parts.len() == 0 {
             panic!("You must add at least one element to make a machine id");
         }
@@ -169,7 +188,9 @@ impl IdBuilder {
             .iter()
             .map(|p| p.to_string())
             .collect::<Result<String, HWIDError>>()?;
-        self.hash.generate_hash(key.as_bytes(), final_string)
+
+        self.hash
+            .generate_hash(key.map(|k| k.as_bytes()), final_string)
     }
 
     /// Adds a component to the `IdBuilder` that will be hashed once you call the [`IdBuilder::build`] function.
@@ -254,6 +275,7 @@ impl IdBuilder {
 mod test {
     use super::*;
     use std::env;
+
     #[test]
     fn every_option_sha256() {
         let mut builder = IdBuilder::new(Encryption::SHA256);
@@ -267,7 +289,7 @@ mod test {
             .add_component(HWIDComponent::FileToken("test.txt"))
             .add_component(HWIDComponent::Username)
             .add_component(HWIDComponent::MachineName);
-        let hash = builder.build("mykey").unwrap();
+        let hash = builder.build(None).unwrap();
         let expected = env::var("SHA256_MACHINEID_HASH").unwrap();
         assert_eq!(expected, hash);
     }
@@ -285,7 +307,7 @@ mod test {
             .add_component(HWIDComponent::FileToken("test.txt"))
             .add_component(HWIDComponent::Username)
             .add_component(HWIDComponent::MachineName);
-        let hash = builder.build("mykey").unwrap();
+        let hash = builder.build(None).unwrap();
         let expected = env::var("SHA1_MACHINEID_HASH").unwrap();
         assert_eq!(expected, hash);
     }
@@ -303,7 +325,61 @@ mod test {
             .add_component(HWIDComponent::FileToken("test.txt"))
             .add_component(HWIDComponent::Username)
             .add_component(HWIDComponent::MachineName);
-        let hash = builder.build("mykey").unwrap();
+        let hash = builder.build(None).unwrap();
+        let expected = env::var("MD5_MACHINEID_HASH").unwrap();
+        assert_eq!(expected, hash);
+    }
+
+    #[test]
+    fn every_option_sha256_hmac() {
+        let mut builder = IdBuilder::new(Encryption::SHA256);
+        builder
+            .add_component(HWIDComponent::SystemID)
+            .add_component(HWIDComponent::OSName)
+            .add_component(HWIDComponent::CPUCores)
+            .add_component(HWIDComponent::CPUID)
+            .add_component(HWIDComponent::DriveSerial)
+            .add_component(HWIDComponent::MacAddress)
+            .add_component(HWIDComponent::FileToken("test.txt"))
+            .add_component(HWIDComponent::Username)
+            .add_component(HWIDComponent::MachineName);
+        let hash = builder.build(Some("mykey")).unwrap();
+        let expected = env::var("SHA256_MACHINEID_HASH").unwrap();
+        assert_eq!(expected, hash);
+    }
+
+    #[test]
+    fn every_option_sha1_hmac() {
+        let mut builder = IdBuilder::new(Encryption::SHA1);
+        builder
+            .add_component(HWIDComponent::SystemID)
+            .add_component(HWIDComponent::OSName)
+            .add_component(HWIDComponent::CPUCores)
+            .add_component(HWIDComponent::CPUID)
+            .add_component(HWIDComponent::DriveSerial)
+            .add_component(HWIDComponent::MacAddress)
+            .add_component(HWIDComponent::FileToken("test.txt"))
+            .add_component(HWIDComponent::Username)
+            .add_component(HWIDComponent::MachineName);
+        let hash = builder.build(Some("mykey")).unwrap();
+        let expected = env::var("SHA1_MACHINEID_HASH").unwrap();
+        assert_eq!(expected, hash);
+    }
+
+    #[test]
+    fn every_option_md5_hmac() {
+        let mut builder = IdBuilder::new(Encryption::MD5);
+        builder
+            .add_component(HWIDComponent::SystemID)
+            .add_component(HWIDComponent::OSName)
+            .add_component(HWIDComponent::CPUCores)
+            .add_component(HWIDComponent::CPUID)
+            .add_component(HWIDComponent::DriveSerial)
+            .add_component(HWIDComponent::MacAddress)
+            .add_component(HWIDComponent::FileToken("test.txt"))
+            .add_component(HWIDComponent::Username)
+            .add_component(HWIDComponent::MachineName);
+        let hash = builder.build(Some("mykey")).unwrap();
         let expected = env::var("MD5_MACHINEID_HASH").unwrap();
         assert_eq!(expected, hash);
     }
