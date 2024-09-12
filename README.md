@@ -66,6 +66,11 @@ Once you are ready, you just need to build the id with your key
 let hwid = builder.build("mykey").unwrap();
 ```
 
+### Community projects
+
+Check some projects built by the community:
+- [machineid-cli](https://github.com/patrickelectric/machineid-cli): A command line tool to generate a 'device ID' based on hardware configuration.
+
 ### Todo
 
 - Optimize the code
