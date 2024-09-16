@@ -62,7 +62,7 @@ pub enum HWIDComponent {
 }
 
 impl HWIDComponent {
-    fn to_string(&self) -> Result<String, HWIDError> {
+    pub fn to_string(&self) -> Result<String, HWIDError> {
         use HWIDComponent::*;
         return match self {
             SystemID => get_hwid(),
