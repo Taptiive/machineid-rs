@@ -56,7 +56,7 @@ pub enum HWIDComponent {
     /// CPU Vendor ID
     CPUID,
     /// The contents of a file
-    FileToken(&'static str),
+    FileToken(String),
     /// UUID of the root disk
     DriveSerial,
 }
@@ -264,7 +264,7 @@ mod test {
             .add_component(HWIDComponent::CPUID)
             .add_component(HWIDComponent::DriveSerial)
             .add_component(HWIDComponent::MacAddress)
-            .add_component(HWIDComponent::FileToken("test.txt"))
+            .add_component(HWIDComponent::FileToken("test.txt".into()))
             .add_component(HWIDComponent::Username)
             .add_component(HWIDComponent::MachineName);
         let hash = builder.build("mykey").unwrap();
@@ -282,7 +282,7 @@ mod test {
             .add_component(HWIDComponent::CPUID)
             .add_component(HWIDComponent::DriveSerial)
             .add_component(HWIDComponent::MacAddress)
-            .add_component(HWIDComponent::FileToken("test.txt"))
+            .add_component(HWIDComponent::FileToken("test.txt".into()))
             .add_component(HWIDComponent::Username)
             .add_component(HWIDComponent::MachineName);
         let hash = builder.build("mykey").unwrap();
@@ -300,7 +300,7 @@ mod test {
             .add_component(HWIDComponent::CPUID)
             .add_component(HWIDComponent::DriveSerial)
             .add_component(HWIDComponent::MacAddress)
-            .add_component(HWIDComponent::FileToken("test.txt"))
+            .add_component(HWIDComponent::FileToken("test.txt".into()))
             .add_component(HWIDComponent::Username)
             .add_component(HWIDComponent::MachineName);
         let hash = builder.build("mykey").unwrap();

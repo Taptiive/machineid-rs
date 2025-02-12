@@ -5,7 +5,10 @@ use serde::Deserialize;
 #[cfg(target_os = "linux")]
 use std::fs::File;
 #[cfg(target_os = "linux")]
-use std::{io::Read, process::Command};
+use std::{
+    io::Read,
+    process::{Command, Stdio},
+};
 
 #[cfg(target_os = "linux")]
 const MACHINE_ID_FILES: [&str; 2] = ["/var/lib/dbus/machine-id", "/etc/machine-id"];
@@ -84,8 +87,7 @@ pub(crate) fn get_disk_id() -> Result<String, HWIDError> {
 #[cfg(target_os = "linux")]
 fn run_command(command: &str) -> Result<String, HWIDError> {
     let mut cmd = Command::new("sh");
-    let cmd = cmd.arg("-c").arg(command);
-
+    cmd.arg("-c").arg(command).stdout(Stdio::piped());
     let output = cmd.output()?;
     if !cmd.status()?.success() {
         return Err(HWIDError::new(
@@ -99,6 +101,7 @@ fn run_command(command: &str) -> Result<String, HWIDError> {
 
 #[cfg(target_os = "linux")]
 fn get_mac_addressof_interface(interface_name: &str) -> Result<String, HWIDError> {
+    let interface_name = interface_name.trim();
     get_file_content(&format!("/sys/class/net/{interface_name}/address"))
 }
 
