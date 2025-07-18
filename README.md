@@ -13,7 +13,15 @@ This Rust package is inspired by [DeviceId](https://github.com/MatthewKing/Devic
 
 - 3 Different types of hash (*MD5*, *SHA1*, *SHA256*)
 - Different components to make the ID
-- Support for Windows, Linux and MacOS
+- Support for Windows, Linux, MacOS, and Termux/Android
+- For Termux/Android:
+- `get_hwid()` uses `getprop` to combine `ro.product.device` and `ro.boot.cdt_hwid`, then hashes the result using `sha2` and `hex` crates.
+  The underlying logic is equivalent to the following bash command:
+  ```bash
+  MACHINE_ID=$(echo "$(getprop ro.product.device)-$(getprop ro.boot.cdt_hwid)" | sha256sum | cut -c1-32)
+  ```
+- `get_disk_id()` uses the inode number of `/data/data/com.termux`.
+- `get_mac_address()` uses `getprop ro.boot.wifimacaddr`.
 - No Admin privileges are required
 
 ### How to use
